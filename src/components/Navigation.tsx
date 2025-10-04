@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Package } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Package, ShoppingCart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 
 export const Navigation = () => {
   const location = useLocation();
+  const { totalItems } = useCart();
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -31,6 +34,22 @@ export const Navigation = () => {
                 className="font-medium"
               >
                 Create Custom
+              </Button>
+            </Link>
+            <Link to="/cart">
+              <Button 
+                variant={isActive("/cart") ? "default" : "ghost"}
+                size="icon"
+                className="relative"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <Badge 
+                    className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center p-0 text-xs"
+                  >
+                    {totalItems}
+                  </Badge>
+                )}
               </Button>
             </Link>
           </div>

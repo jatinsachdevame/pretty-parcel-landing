@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { hamperItems } from "@/data/products";
 import { Plus, Minus, ShoppingCart, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 interface SelectedItem {
   id: string;
@@ -18,6 +19,7 @@ interface SelectedItem {
 const CustomHamper = () => {
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const { addToCart } = useCart();
 
   const filteredItems = selectedCategory === "all" 
     ? hamperItems 
@@ -58,9 +60,23 @@ const CustomHamper = () => {
       toast.error("Please select at least one item");
       return;
     }
+    
+    // Create a custom hamper product
+    const customHamper = {
+      id: `custom-${Date.now()}`,
+      name: "Custom Hamper",
+      description: `Custom hamper with ${selectedItems.length} items`,
+      price: finalPrice,
+      category: "birthday" as const,
+      image: "/src/assets/hero-hamper.jpg",
+      items: selectedItems.map(item => `${item.name} x${item.quantity}`)
+    };
+    
+    addToCart(customHamper);
     toast.success("Custom hamper added to cart!", {
-      description: `Total: $${finalPrice.toFixed(2)}`
+      description: `Total: ₹${finalPrice.toFixed(2)}`
     });
+    setSelectedItems([]);
   };
 
   return (
@@ -139,7 +155,7 @@ const CustomHamper = () => {
                               {item.category}
                             </Badge>
                           </div>
-                          <p className="text-xl font-bold text-primary">${item.price}</p>
+                          <p className="text-xl font-bold text-primary">₹{item.price}</p>
                         </div>
                         
                         <div className="flex items-center gap-2 mt-4">
@@ -198,7 +214,7 @@ const CustomHamper = () => {
                               {item.name} × {item.quantity}
                             </span>
                             <span className="font-semibold">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              ₹{(item.price * item.quantity).toFixed(2)}
                             </span>
                           </div>
                         ))}
@@ -206,14 +222,14 @@ const CustomHamper = () => {
                       
                       <Separator className="my-4" />
                       
-                      <div className="space-y-2 text-sm">
+                        <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Subtotal</span>
-                          <span className="font-semibold">${totalPrice.toFixed(2)}</span>
+                          <span className="font-semibold">₹{totalPrice.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Packaging & Ribbon</span>
-                          <span className="font-semibold">${packagingFee.toFixed(2)}</span>
+                          <span className="font-semibold">₹{packagingFee.toFixed(2)}</span>
                         </div>
                       </div>
                       
@@ -222,7 +238,7 @@ const CustomHamper = () => {
                       <div className="flex justify-between items-center mb-6">
                         <span className="text-lg font-semibold">Total</span>
                         <span className="text-3xl font-bold text-primary">
-                          ${finalPrice.toFixed(2)}
+                          ₹{finalPrice.toFixed(2)}
                         </span>
                       </div>
                     </>

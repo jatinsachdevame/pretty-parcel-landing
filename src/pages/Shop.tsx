@@ -6,17 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { products, Product } from "@/data/products";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const { addToCart } = useCart();
 
   const filteredProducts = selectedCategory === "all" 
     ? products 
     : products.filter(p => p.category === selectedCategory);
 
   const handleAddToCart = (product: Product) => {
+    addToCart(product);
     toast.success(`${product.name} added to cart!`, {
-      description: `$${product.price.toFixed(2)}`
+      description: `₹${product.price.toFixed(2)}`
     });
   };
 
@@ -98,7 +101,7 @@ const Shop = () => {
                       )}
                     </ul>
                   </div>
-                  <p className="text-3xl font-bold text-primary">${product.price.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-primary">₹{product.price.toFixed(2)}</p>
                 </CardContent>
                 <CardFooter className="p-6 pt-0">
                   <Button 

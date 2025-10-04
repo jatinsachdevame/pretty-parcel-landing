@@ -4,10 +4,18 @@ import { products } from "@/data/products";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Sparkles } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 import corporateImage from "@/assets/corporate-hamper.jpg";
 
 export default function CorporateCollection() {
   const corporateProducts = products.filter(p => p.category === "corporate");
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (product: typeof products[0]) => {
+    addToCart(product);
+    toast.success(`${product.name} added to cart!`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,8 +91,8 @@ export default function CorporateCollection() {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-primary">${product.price}</span>
-                    <Button>Add to Cart</Button>
+                    <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                    <Button onClick={() => handleAddToCart(product)}>Add to Cart</Button>
                   </CardFooter>
                 </Card>
               ))}
