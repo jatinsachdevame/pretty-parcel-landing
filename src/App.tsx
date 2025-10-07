@@ -11,6 +11,8 @@ import Cart from "./pages/Cart";
 import BirthdayCollection from "./pages/BirthdayCollection";
 import WeddingCollection from "./pages/WeddingCollection";
 import CorporateCollection from "./pages/CorporateCollection";
+import Auth from "./pages/Auth";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

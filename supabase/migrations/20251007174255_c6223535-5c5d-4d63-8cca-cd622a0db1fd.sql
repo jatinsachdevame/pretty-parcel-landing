@@ -1,0 +1,129 @@
+-- Create enum for product categories
+CREATE TYPE public.product_category AS ENUM ('birthday', 'wedding', 'corporate');
+
+-- Create enum for user roles
+CREATE TYPE public.app_role AS ENUM ('admin', 'user');
+
+-- Create products table
+CREATE TABLE public.products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+  category product_category NOT NULL,
+  image_url TEXT,
+  discount_percentage DECIMAL(5, 2) DEFAULT 0 CHECK (discount_percentage >= 0 AND discount_percentage <= 100),
+  items TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS on products
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+
+-- Products are viewable by everyone
+CREATE POLICY "Products are viewable by everyone"
+  ON public.products
+  FOR SELECT
+  USING (true);
+
+-- Create user_roles table
+CREATE TABLE public.user_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role app_role NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, role)
+);
+
+-- Enable RLS on user_roles
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own roles
+CREATE POLICY "Users can view their own roles"
+  ON public.user_roles
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Create security definer function to check roles
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = _role
+  )
+$$;
+
+-- Only admins can insert products
+CREATE POLICY "Admins can insert products"
+  ON public.products
+  FOR INSERT
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+-- Only admins can update products
+CREATE POLICY "Admins can update products"
+  ON public.products
+  FOR UPDATE
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Only admins can delete products
+CREATE POLICY "Admins can delete products"
+  ON public.products
+  FOR DELETE
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Create storage bucket for product images (without public column)
+INSERT INTO storage.buckets (id, name)
+VALUES ('product-images', 'product-images');
+
+-- Storage policies for product images
+CREATE POLICY "Product images are publicly accessible"
+  ON storage.objects
+  FOR SELECT
+  USING (bucket_id = 'product-images');
+
+CREATE POLICY "Admins can upload product images"
+  ON storage.objects
+  FOR INSERT
+  WITH CHECK (
+    bucket_id = 'product-images' 
+    AND public.has_role(auth.uid(), 'admin')
+  );
+
+CREATE POLICY "Admins can update product images"
+  ON storage.objects
+  FOR UPDATE
+  USING (
+    bucket_id = 'product-images' 
+    AND public.has_role(auth.uid(), 'admin')
+  );
+
+CREATE POLICY "Admins can delete product images"
+  ON storage.objects
+  FOR DELETE
+  USING (
+    bucket_id = 'product-images' 
+    AND public.has_role(auth.uid(), 'admin')
+  );
+
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for products updated_at
+CREATE TRIGGER update_products_updated_at
+  BEFORE UPDATE ON public.products
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();

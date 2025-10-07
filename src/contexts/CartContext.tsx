@@ -3,6 +3,7 @@ import { Product } from "@/data/products";
 
 export interface CartItem extends Product {
   quantity: number;
+  finalPrice?: number; // Price after discount
 }
 
 interface CartContextType {
@@ -20,19 +21,25 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
+  const calculateFinalPrice = (product: Product) => {
+    const discount = product.discount_percentage || 0;
+    return product.price - (product.price * discount / 100);
+  };
+
   const addToCart = (product: Product, quantity: number = 1) => {
     setItems(currentItems => {
       const existingItem = currentItems.find(item => item.id === product.id);
+      const finalPrice = calculateFinalPrice(product);
       
       if (existingItem) {
         return currentItems.map(item =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: item.quantity + quantity, finalPrice }
             : item
         );
       }
       
-      return [...currentItems, { ...product, quantity }];
+      return [...currentItems, { ...product, quantity, finalPrice }];
     });
   };
 
@@ -58,7 +65,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + (item.finalPrice || item.price) * item.quantity, 0);
 
   return (
     <CartContext.Provider

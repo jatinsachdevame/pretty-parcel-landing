@@ -6,6 +6,7 @@ export interface Product {
   category: "birthday" | "wedding" | "corporate";
   image: string;
   items: string[];
+  discount_percentage?: number;
 }
 
 export const products: Product[] = [
