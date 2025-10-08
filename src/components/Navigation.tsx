@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingCart } from "lucide-react";
+import { Package, ShoppingCart, User, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 
 export const Navigation = () => {
   const location = useLocation();
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -36,6 +40,16 @@ export const Navigation = () => {
                 Create Custom
               </Button>
             </Link>
+            {isAdmin && (
+              <Link to="/admin">
+                <Button 
+                  variant={isActive("/admin") ? "default" : "ghost"}
+                  className="font-medium"
+                >
+                  Admin Panel
+                </Button>
+              </Link>
+            )}
             <Link to="/cart">
               <Button 
                 variant={isActive("/cart") ? "default" : "ghost"}
@@ -52,6 +66,24 @@ export const Navigation = () => {
                 )}
               </Button>
             </Link>
+            {user ? (
+              <Button 
+                variant="ghost"
+                size="icon"
+                onClick={() => signOut()}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button 
+                  variant={isActive("/auth") ? "default" : "ghost"}
+                  size="icon"
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
