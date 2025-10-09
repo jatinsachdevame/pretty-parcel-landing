@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,18 +7,22 @@ import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { CheckoutForm } from "@/components/CheckoutForm";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
-    toast.success("Proceeding to checkout...", {
-      description: `Total: ₹${totalPrice.toFixed(2)}`
-    });
+    setShowCheckout(true);
+  };
+
+  const handleCheckoutSuccess = () => {
+    setShowCheckout(false);
   };
 
   return (
@@ -107,51 +112,58 @@ const Cart = () => {
                 ))}
               </div>
 
-              {/* Cart Summary */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-2xl font-bold mb-4">Order Summary</h3>
-                  
-                  <div className="space-y-3 mb-4">
-                    {items.map(item => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {item.name} × {item.quantity}
-                        </span>
-                        <span className="font-semibold">
-                          ₹{(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <Separator className="my-4" />
-                  
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-xl font-semibold">Total</span>
-                    <span className="text-3xl font-bold text-primary">
-                      ₹{totalPrice.toFixed(2)}
-                    </span>
-                  </div>
+              {/* Checkout Form or Cart Summary */}
+              {showCheckout ? (
+                <CheckoutForm
+                  onSuccess={handleCheckoutSuccess}
+                  onCancel={() => setShowCheckout(false)}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-2xl font-bold mb-4">Order Summary</h3>
+                    
+                    <div className="space-y-3 mb-4">
+                      {items.map(item => (
+                        <div key={item.id} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {item.name} × {item.quantity}
+                          </span>
+                          <span className="font-semibold">
+                            ₹{(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="flex justify-between items-center mb-6">
+                      <span className="text-xl font-semibold">Total</span>
+                      <span className="text-3xl font-bold text-primary">
+                        ₹{totalPrice.toFixed(2)}
+                      </span>
+                    </div>
 
-                  <div className="space-y-3">
-                    <Button 
-                      className="w-full" 
-                      size="lg"
-                      onClick={handleCheckout}
-                    >
-                      Proceed to Checkout
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      onClick={clearCart}
-                    >
-                      Clear Cart
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="space-y-3">
+                      <Button 
+                        className="w-full" 
+                        size="lg"
+                        onClick={handleCheckout}
+                      >
+                        Proceed to Checkout
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={clearCart}
+                      >
+                        Clear Cart
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>
