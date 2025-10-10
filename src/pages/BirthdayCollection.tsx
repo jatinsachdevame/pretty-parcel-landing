@@ -1,19 +1,54 @@
+import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { products } from "@/data/products";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Gift, Sparkles } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import birthdayImage from "@/assets/birthday-hamper.jpg";
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: "birthday" | "wedding" | "corporate";
+  image_url: string;
+  items: string[];
+  discount_percentage?: number;
+}
+
 export default function BirthdayCollection() {
-  const birthdayProducts = products.filter(p => p.category === "birthday");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
 
-  const handleAddToCart = (product: typeof products[0]) => {
-    addToCart(product);
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("category", "birthday")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product: Product) => {
+    addToCart({ ...product, image: product.image_url });
     toast.success(`${product.name} added to cart!`);
   };
 
@@ -63,40 +98,44 @@ export default function BirthdayCollection() {
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {birthdayProducts.map((product) => (
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover-scale">
-                  <div className="h-64 overflow-hidden">
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="font-heading">{product.name}</CardTitle>
-                    <CardDescription>{product.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="font-semibold text-foreground">Includes:</p>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {product.items.map((item, idx) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <span className="text-primary mt-1">•</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+            {loading ? (
+              <div className="text-center py-12">Loading products...</div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {products.map((product) => (
+                  <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover-scale">
+                    <div className="h-64 overflow-hidden">
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                      />
                     </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-primary">₹{product.price}</span>
-                    <Button onClick={() => handleAddToCart(product)}>Add to Cart</Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                    <CardHeader>
+                      <CardTitle className="font-heading">{product.name}</CardTitle>
+                      <CardDescription>{product.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <p className="font-semibold text-foreground">Includes:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1">
+                          {product.items.map((item, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-primary mt-1">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                      <Button onClick={() => handleAddToCart(product)}>Add to Cart</Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>
