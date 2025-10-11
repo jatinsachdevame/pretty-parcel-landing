@@ -47,8 +47,8 @@ const handler = async (req: Request): Promise<Response> => {
         <tr>
           <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.product_name}</td>
           <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${item.price_at_purchase.toFixed(2)}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(item.quantity * item.price_at_purchase).toFixed(2)}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price_at_purchase.toFixed(2)}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${(item.quantity * item.price_at_purchase).toFixed(2)}</td>
         </tr>
       `
       )
@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </table>
 
                 <div class="total">
-                  Total: $${totalPrice.toFixed(2)}
+                  Total: ₹${totalPrice.toFixed(2)}
                 </div>
 
                 <p style="margin-top: 30px;">We'll send you another email once your order has been shipped.</p>
