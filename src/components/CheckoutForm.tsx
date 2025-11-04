@@ -10,6 +10,8 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
+const isValidUUID = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 interface CheckoutFormProps {
   onSuccess: () => void;
   onCancel: () => void;
@@ -52,7 +54,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
       // Create order items
       const orderItems = items.map((item) => ({
         order_id: order.id,
-        product_id: item.id.startsWith('custom-') ? null : item.id,
+        product_id: isValidUUID(item.id) ? item.id : null,
         product_name: item.name,
         quantity: item.quantity,
         price_at_purchase: item.finalPrice || item.price,
