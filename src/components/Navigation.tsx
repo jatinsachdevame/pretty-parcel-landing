@@ -36,7 +36,7 @@ export const Navigation = () => {
           <Link to="/" className="flex items-center gap-2 group">
             <Package className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
             <span className="text-xl font-bold text-primary hidden sm:inline">The Pretty Parcel Studio</span>
-            <span className="text-xl font-bold text-primary sm:hidden">PPS</span>
+            <span className="text-xl font-bold text-primary sm:hidden">TPPS</span>
           </Link>
           
           {isMobile ? (
