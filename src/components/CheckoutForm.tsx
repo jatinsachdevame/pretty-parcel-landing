@@ -116,7 +116,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, customerName: e.target.value })
               }
-              placeholder="John Doe"
+              placeholder="Priya Sharma"
             />
           </div>
 
@@ -130,7 +130,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, customerEmail: e.target.value })
               }
-              placeholder="john@example.com"
+              placeholder="priya.sharma@example.com"
             />
           </div>
 
@@ -144,7 +144,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, customerPhone: e.target.value })
               }
-              placeholder="+1 234 567 8900"
+              placeholder="+91 98765 43210"
             />
           </div>
 
@@ -157,7 +157,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, shippingAddress: e.target.value })
               }
-              placeholder="123 Main St&#10;City, State 12345&#10;Country"
+              placeholder="123 MG Road&#10;Mumbai, Maharashtra 400001&#10;India"
               rows={4}
             />
           </div>
