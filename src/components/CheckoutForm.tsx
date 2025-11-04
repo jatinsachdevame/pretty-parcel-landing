@@ -52,7 +52,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
       // Create order items
       const orderItems = items.map((item) => ({
         order_id: order.id,
-        product_id: item.id,
+        product_id: item.id.startsWith('custom-') ? null : item.id,
         product_name: item.name,
         quantity: item.quantity,
         price_at_purchase: item.finalPrice || item.price,
