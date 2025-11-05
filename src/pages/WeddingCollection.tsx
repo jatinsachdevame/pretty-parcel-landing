@@ -3,9 +3,9 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles } from "lucide-react";
+import { Heart, Sparkles, Plus, Minus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import weddingImage from "@/assets/wedding-hamper-2.jpg";
 
@@ -23,8 +23,7 @@ interface Product {
 export default function WeddingCollection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const { addToCart } = useCart();
+  const { addToCart, updateQuantity, items } = useCart();
 
   useEffect(() => {
     fetchProducts();
@@ -42,7 +41,11 @@ export default function WeddingCollection() {
       setProducts(data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast.error("Failed to load products");
+      toast({
+        title: "Error",
+        description: "Failed to load products",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -50,8 +53,29 @@ export default function WeddingCollection() {
 
   const handleAddToCart = (product: Product) => {
     addToCart({ ...product, image: product.image_url });
-    setQuantities(prev => ({ ...prev, [product.id]: (prev[product.id] || 0) + 1 }));
-    toast.success(`${product.name} added to cart!`);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+
+  const handleIncrement = (product: Product) => {
+    const cartItem = items.find(item => item.id === product.id);
+    if (cartItem) {
+      updateQuantity(product.id, cartItem.quantity + 1);
+    }
+  };
+
+  const handleDecrement = (product: Product) => {
+    const cartItem = items.find(item => item.id === product.id);
+    if (cartItem) {
+      updateQuantity(product.id, cartItem.quantity - 1);
+    }
+  };
+
+  const getProductQuantity = (productId: string) => {
+    const cartItem = items.find(item => item.id === productId);
+    return cartItem?.quantity || 0;
   };
 
   return (
@@ -132,14 +156,31 @@ export default function WeddingCollection() {
                     </CardContent>
                     <CardFooter className="flex justify-between items-center">
                       <span className="text-2xl font-bold text-primary">₹{product.price}</span>
-                      <Button onClick={() => handleAddToCart(product)} className="relative">
-                        Add to Cart
-                        {quantities[product.id] > 0 && (
-                          <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                            {quantities[product.id]}
+                      {getProductQuantity(product.id) === 0 ? (
+                        <Button onClick={() => handleAddToCart(product)}>
+                          Add to Cart
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleDecrement(product)}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="text-lg font-semibold min-w-[2rem] text-center">
+                            {getProductQuantity(product.id)}
                           </span>
-                        )}
-                      </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleIncrement(product)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </CardFooter>
                   </Card>
                 ))}
