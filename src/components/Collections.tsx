@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import birthdayImage from "@/assets/birthday-hamper.jpg";
-import weddingImage from "@/assets/wedding-hamper.jpg";
-import corporateImage from "@/assets/corporate-hamper.jpg";
+import birthdayImage from "@/assets/birthday-hamper-1.jpg";
+import weddingImage from "@/assets/wedding-hamper-1.jpg";
+import corporateImage from "@/assets/corporate-hamper-1.jpg";
 
 const collections = [
   {

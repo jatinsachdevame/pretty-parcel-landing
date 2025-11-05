@@ -7,7 +7,7 @@ import { Briefcase, Sparkles } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import corporateImage from "@/assets/corporate-hamper.jpg";
+import corporateImage from "@/assets/corporate-hamper-2.jpg";
 
 interface Product {
   id: string;
@@ -23,6 +23,7 @@ interface Product {
 export default function CorporateCollection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function CorporateCollection() {
 
   const handleAddToCart = (product: Product) => {
     addToCart({ ...product, image: product.image_url });
+    setQuantities(prev => ({ ...prev, [product.id]: (prev[product.id] || 0) + 1 }));
     toast.success(`${product.name} added to cart!`);
   };
 
@@ -130,7 +132,14 @@ export default function CorporateCollection() {
                     </CardContent>
                     <CardFooter className="flex justify-between items-center">
                       <span className="text-2xl font-bold text-primary">₹{product.price}</span>
-                      <Button onClick={() => handleAddToCart(product)}>Add to Cart</Button>
+                      <Button onClick={() => handleAddToCart(product)} className="relative">
+                        Add to Cart
+                        {quantities[product.id] > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                            {quantities[product.id]}
+                          </span>
+                        )}
+                      </Button>
                     </CardFooter>
                   </Card>
                 ))}

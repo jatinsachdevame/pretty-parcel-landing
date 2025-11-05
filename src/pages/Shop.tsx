@@ -23,6 +23,7 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -52,6 +53,7 @@ const Shop = () => {
 
   const handleAddToCart = (product: Product) => {
     addToCart({ ...product, image: product.image_url });
+    setQuantities(prev => ({ ...prev, [product.id]: (prev[product.id] || 0) + 1 }));
     toast.success(`${product.name} added to cart!`, {
       description: `₹${product.price.toFixed(2)}`
     });
@@ -142,12 +144,17 @@ const Shop = () => {
                   </CardContent>
                   <CardFooter className="p-6 pt-0">
                     <Button 
-                      className="w-full group" 
+                      className="w-full group relative" 
                       size="lg"
                       onClick={() => handleAddToCart(product)}
                     >
                       <ShoppingCart className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                       Add to Cart
+                      {quantities[product.id] > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-primary-foreground text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                          {quantities[product.id]}
+                        </span>
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
