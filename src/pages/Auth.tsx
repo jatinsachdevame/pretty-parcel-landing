@@ -6,12 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { z } from "zod";
 
 const authSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100)
+});
+
+const signupSchema = authSchema.extend({
+  fullName: z.string().trim().min(2, { message: "Full name is required" }).max(100),
+  phone: z.string().trim().min(10, { message: "Valid phone number is required" }).max(15),
+  address: z.string().trim().min(10, { message: "Address is required" }).max(500)
 });
 
 const Auth = () => {
@@ -21,6 +28,9 @@ const Auth = () => {
   const [loginPassword, setLoginPassword] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [signupFullName, setSignupFullName] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
+  const [signupAddress, setSignupAddress] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +59,14 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validation = authSchema.safeParse({ email: signupEmail, password: signupPassword });
+    const validation = signupSchema.safeParse({ 
+      email: signupEmail, 
+      password: signupPassword,
+      fullName: signupFullName,
+      phone: signupPhone,
+      address: signupAddress
+    });
+    
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
       return;
@@ -58,7 +75,7 @@ const Auth = () => {
     setIsLoading(true);
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
@@ -72,10 +89,30 @@ const Auth = () => {
       } else {
         toast.error(error.message);
       }
-    } else {
-      toast.success("Account created successfully! Please check your email to confirm.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (data.user) {
+      // Create profile record
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          user_id: data.user.id,
+          full_name: signupFullName,
+          phone: signupPhone,
+          address: signupAddress,
+        });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        toast.error("Account created but profile setup failed. Please contact support.");
+      } else {
+        toast.success("Account created successfully!");
+      }
       navigate("/");
     }
+    
     setIsLoading(false);
   };
 
@@ -126,7 +163,18 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-fullname">Full Name *</Label>
+                  <Input
+                    id="signup-fullname"
+                    type="text"
+                    placeholder="Priya Sharma"
+                    value={signupFullName}
+                    onChange={(e) => setSignupFullName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email *</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -137,7 +185,29 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-phone">Phone Number *</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={signupPhone}
+                    onChange={(e) => setSignupPhone(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-address">Address *</Label>
+                  <Textarea
+                    id="signup-address"
+                    placeholder="123 MG Road, Mumbai, Maharashtra 400001, India"
+                    value={signupAddress}
+                    onChange={(e) => setSignupAddress(e.target.value)}
+                    required
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password *</Label>
                   <Input
                     id="signup-password"
                     type="password"

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
@@ -19,6 +20,8 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [useProfileAddress, setUseProfileAddress] = useState(true);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   
   const [formData, setFormData] = useState({
     customerName: "",
@@ -26,6 +29,34 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
     customerPhone: "",
     shippingAddress: "",
   });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      setIsLoadingProfile(true);
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error loading profile:", error);
+        toast.error("Could not load profile information");
+      } else if (profile) {
+        setFormData({
+          customerName: profile.full_name,
+          customerEmail: user.email || "",
+          customerPhone: profile.phone,
+          shippingAddress: profile.address,
+        });
+      }
+      setIsLoadingProfile(false);
+    };
+
+    loadProfile();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +130,17 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
     }
   };
 
+  if (isLoadingProfile) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading your information...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -106,11 +148,23 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex items-center space-x-2 mb-4 p-3 bg-secondary/20 rounded-lg">
+            <Checkbox
+              id="useProfile"
+              checked={useProfileAddress}
+              onCheckedChange={(checked) => setUseProfileAddress(checked as boolean)}
+            />
+            <Label htmlFor="useProfile" className="cursor-pointer">
+              Use my saved address and contact details
+            </Label>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="customerName">Full Name *</Label>
             <Input
               id="customerName"
               required
+              disabled={useProfileAddress}
               value={formData.customerName}
               onChange={(e) =>
                 setFormData({ ...formData, customerName: e.target.value })
@@ -125,6 +179,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
               id="customerEmail"
               type="email"
               required
+              disabled
               value={formData.customerEmail}
               onChange={(e) =>
                 setFormData({ ...formData, customerEmail: e.target.value })
@@ -139,6 +194,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
               id="customerPhone"
               type="tel"
               required
+              disabled={useProfileAddress}
               value={formData.customerPhone}
               onChange={(e) =>
                 setFormData({ ...formData, customerPhone: e.target.value })
@@ -152,6 +208,7 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
             <Textarea
               id="shippingAddress"
               required
+              disabled={useProfileAddress}
               value={formData.shippingAddress}
               onChange={(e) =>
                 setFormData({ ...formData, shippingAddress: e.target.value })

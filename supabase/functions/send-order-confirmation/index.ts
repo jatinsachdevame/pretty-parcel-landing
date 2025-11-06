@@ -1,8 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import Twilio from "https://esm.sh/twilio@5.3.4";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+// Initialize Twilio client
+const twilioClient = Twilio(
+  Deno.env.get("TWILIO_ACCOUNT_SID"),
+  Deno.env.get("TWILIO_AUTH_TOKEN")
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -212,6 +219,35 @@ const handler = async (req: Request): Promise<Response> => {
         order_id: orderId,
         recipient_email: order.customer_email,
       });
+
+    // Send WhatsApp message via Twilio
+    try {
+      const whatsappMessage = `Hello ${order.customer_name}! 🎁\n\nThank you for your order with Gift Hampers!\n\nOrder #${order.id.slice(0, 8).toUpperCase()}\nTotal: ₹${order.total_price.toFixed(2)}\n\nWe've received your order and will process it shortly. You'll receive an email confirmation as well.\n\nThank you for shopping with us!`;
+      
+      const twilioWhatsAppNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
+      
+      // Format phone number for WhatsApp (must include country code)
+      let customerPhone = order.customer_phone.replace(/\s/g, '');
+      if (!customerPhone.startsWith('+')) {
+        // Assuming Indian numbers, add +91 if not present
+        if (customerPhone.startsWith('91')) {
+          customerPhone = '+' + customerPhone;
+        } else {
+          customerPhone = '+91' + customerPhone;
+        }
+      }
+
+      await twilioClient.messages.create({
+        body: whatsappMessage,
+        from: `whatsapp:${twilioWhatsAppNumber}`,
+        to: `whatsapp:${customerPhone}`
+      });
+
+      console.log(`WhatsApp message sent successfully to ${customerPhone}`);
+    } catch (whatsappError) {
+      console.error("WhatsApp sending error:", whatsappError);
+      // Don't throw error - email was sent successfully, WhatsApp is supplementary
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 

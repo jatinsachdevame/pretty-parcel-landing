@@ -1,21 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CheckoutForm } from "@/components/CheckoutForm";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [showCheckout, setShowCheckout] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !user && items.length > 0) {
+      toast.error("Please login to proceed to checkout");
+      navigate("/auth");
+    }
+  }, [user, isLoading, items.length, navigate]);
 
   const handleCheckout = () => {
     if (items.length === 0) {
       toast.error("Your cart is empty");
+      return;
+    }
+    if (!user) {
+      toast.error("Please login to proceed");
+      navigate("/auth");
       return;
     }
     setShowCheckout(true);
