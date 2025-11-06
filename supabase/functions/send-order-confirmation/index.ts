@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -16,13 +17,19 @@ interface OrderItem {
 }
 
 interface OrderConfirmationRequest {
-  customerName: string;
-  customerEmail: string;
-  orderNumber: string;
-  items: OrderItem[];
-  totalPrice: number;
-  shippingAddress: string;
+  orderId: string;
+  orderToken: string;
 }
+
+// Input validation helpers
+const isValidUuid = (id: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
+const isValidEmail = (email: string): boolean => {
+  return email.length <= 255 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -30,16 +37,88 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const {
-      customerName,
-      customerEmail,
-      orderNumber,
-      items,
-      totalPrice,
-      shippingAddress,
-    }: OrderConfirmationRequest = await req.json();
+    // Initialize Supabase client with service role for verification
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("Sending order confirmation to:", customerEmail);
+    const { orderId, orderToken }: OrderConfirmationRequest = await req.json();
+
+    // Validate inputs
+    if (!orderId || !orderToken) {
+      console.error("Missing required fields");
+      return new Response(
+        JSON.stringify({ error: "Missing orderId or orderToken" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isValidUuid(orderId) || !isValidUuid(orderToken)) {
+      console.error("Invalid UUID format");
+      return new Response(
+        JSON.stringify({ error: "Invalid ID format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify order exists and token matches
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("id, customer_name, customer_email, customer_phone, shipping_address, total_price, created_at, order_token")
+      .eq("id", orderId)
+      .eq("order_token", orderToken)
+      .single();
+
+    if (orderError || !order) {
+      console.error("Order not found or token mismatch:", orderError);
+      return new Response(
+        JSON.stringify({ error: "Order not found or invalid token" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate email format
+    if (!isValidEmail(order.customer_email)) {
+      console.error("Invalid email format:", order.customer_email);
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check rate limiting (max 5 emails per order in last hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recentSends, error: logError } = await supabase
+      .from("email_send_log")
+      .select("id")
+      .eq("order_id", orderId)
+      .gte("sent_at", oneHourAgo);
+
+    if (logError) {
+      console.error("Error checking rate limit:", logError);
+    } else if (recentSends && recentSends.length >= 5) {
+      console.warn("Rate limit exceeded for order:", orderId);
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Max 5 emails per hour." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get order items
+    const { data: items, error: itemsError } = await supabase
+      .from("order_items")
+      .select("product_name, quantity, price_at_purchase")
+      .eq("order_id", orderId);
+
+    if (itemsError || !items) {
+      console.error("Failed to fetch order items:", itemsError);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch order details" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Sending order confirmation to:", order.customer_email);
 
     const itemsHtml = items
       .map(
@@ -56,8 +135,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Gift Hampers <onboarding@resend.dev>",
-      to: [customerEmail],
-      subject: `Order Confirmation - ${orderNumber}`,
+      to: [order.customer_email],
+      subject: `Order Confirmation - ${order.id.slice(0, 8).toUpperCase()}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -79,15 +158,15 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="container">
               <div class="header">
                 <h1 style="margin: 0;">Thank You for Your Order!</h1>
-                <p style="margin: 10px 0 0 0;">Order #${orderNumber}</p>
+                <p style="margin: 10px 0 0 0;">Order #${order.id.slice(0, 8).toUpperCase()}</p>
               </div>
               <div class="content">
-                <p>Dear ${customerName},</p>
+                <p>Dear ${order.customer_name},</p>
                 <p>Thank you for your order! We're excited to prepare your gift hamper(s) for you.</p>
                 
                 <div class="order-details">
                   <h3 style="margin-top: 0;">Shipping Address</h3>
-                  <p style="margin: 0;">${shippingAddress.replace(/\n/g, "<br>")}</p>
+                  <p style="margin: 0;">${order.shipping_address.replace(/\n/g, "<br>")}</p>
                 </div>
 
                 <h3>Order Summary</h3>
@@ -106,11 +185,14 @@ const handler = async (req: Request): Promise<Response> => {
                 </table>
 
                 <div class="total">
-                  Total: ₹${totalPrice.toFixed(2)}
+                  Total: ₹${order.total_price.toFixed(2)}
                 </div>
 
                 <p style="margin-top: 30px;">We'll send you another email once your order has been shipped.</p>
                 <p>If you have any questions, please don't hesitate to contact us.</p>
+                <p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                  <strong>Track your order:</strong> Save your order tracking token for future reference: <code style="background: white; padding: 5px 10px; border-radius: 3px;">${orderToken}</code>
+                </p>
               </div>
               <div class="footer">
                 <p>© ${new Date().getFullYear()} Gift Hampers. All rights reserved.</p>
@@ -123,7 +205,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    // Log the email send for rate limiting
+    await supabase
+      .from("email_send_log")
+      .insert({
+        order_id: orderId,
+        recipient_email: order.customer_email,
+      });
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Order confirmation email sent successfully" 
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

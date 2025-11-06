@@ -67,17 +67,13 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
 
       if (itemsError) throw itemsError;
 
-      // Send confirmation email
+      // Send confirmation email with order token
       const { error: emailError } = await supabase.functions.invoke(
         "send-order-confirmation",
         {
           body: {
-            customerName: formData.customerName,
-            customerEmail: formData.customerEmail,
-            orderNumber: order.id.slice(0, 8).toUpperCase(),
-            items: orderItems,
-            totalPrice: totalPrice,
-            shippingAddress: formData.shippingAddress,
+            orderId: order.id,
+            orderToken: order.order_token,
           },
         }
       );

@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      email_send_log: {
+        Row: {
+          id: string
+          order_id: string
+          recipient_email: string
+          sent_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          recipient_email: string
+          sent_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          recipient_email?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_send_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -66,6 +95,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id: string
+          order_token: string
           shipping_address: string
           status: string
           total_price: number
@@ -78,6 +108,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id?: string
+          order_token?: string
           shipping_address: string
           status?: string
           total_price: number
@@ -90,6 +121,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           id?: string
+          order_token?: string
           shipping_address?: string
           status?: string
           total_price?: number
