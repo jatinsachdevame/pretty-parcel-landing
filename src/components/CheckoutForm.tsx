@@ -50,13 +50,16 @@ export const CheckoutForm = ({ onSuccess, onCancel }: CheckoutFormProps) => {
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.id.startsWith('custom-') ? crypto.randomUUID() : item.id,
-        product_name: item.name,
-        quantity: item.quantity,
-        price_at_purchase: item.finalPrice || item.price,
-      }));
+      const orderItems = items.map((item) => {
+        const isLikelyUuid = typeof item.id === 'string' && item.id.includes('-') && !item.id.startsWith('custom-');
+        return {
+          order_id: order.id,
+          product_id: isLikelyUuid ? (item.id as any) : null,
+          product_name: item.name,
+          quantity: item.quantity,
+          price_at_purchase: item.finalPrice || item.price,
+        };
+      });
 
       const { error: itemsError } = await supabase
         .from("order_items")

@@ -3,17 +3,17 @@ import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Sarah Johnson",
+    name: "Priya Sharma",
     text: "The hamper I ordered for my mother's birthday was absolutely stunning! The presentation was beautiful and she loved every item inside.",
     rating: 5
   },
   {
-    name: "Michael Chen",
+    name: "Arjun Mehta",
     text: "Perfect corporate gifts for our clients. The quality and attention to detail exceeded our expectations. Will definitely order again!",
     rating: 5
   },
   {
-    name: "Emily Roberts",
+    name: "Neha Verma",
     text: "Beautiful wedding gift hamper! The couple was thrilled. The packaging alone was worth it. Highly recommend!",
     rating: 5
   }
