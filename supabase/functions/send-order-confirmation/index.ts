@@ -213,54 +213,7 @@ const handler = async (req: Request): Promise<Response> => {
         recipient_email: order.customer_email,
       });
 
-    // Send WhatsApp message via Twilio REST API
-    try {
-      const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-      const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-      const twilioWhatsAppNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
-      
-      const whatsappMessage = `Hello ${order.customer_name}! 🎁\n\nThank you for your order with Gift Hampers!\n\nOrder #${order.id.slice(0, 8).toUpperCase()}\nTotal: ₹${order.total_price.toFixed(2)}\n\nWe've received your order and will process it shortly. You'll receive an email confirmation as well.\n\nThank you for shopping with us!`;
-      
-      // Format phone number for WhatsApp (must include country code)
-      let customerPhone = order.customer_phone.replace(/\s/g, '');
-      if (!customerPhone.startsWith('+')) {
-        // For Indian numbers, add +91 if not present
-        if (customerPhone.startsWith('91')) {
-          customerPhone = '+' + customerPhone;
-        } else {
-          customerPhone = '+91' + customerPhone;
-        }
-      }
-
-      // Send WhatsApp message using Twilio REST API
-      const twilioResponse = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + btoa(`${twilioAccountSid}:${twilioAuthToken}`),
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            From: `whatsapp:${twilioWhatsAppNumber}`,
-            To: `whatsapp:${customerPhone}`,
-            Body: whatsappMessage,
-          }),
-        }
-      );
-
-      if (twilioResponse.ok) {
-        console.log(`WhatsApp message sent successfully to ${customerPhone}`);
-      } else {
-        const errorData = await twilioResponse.text();
-        console.error("Twilio API error:", errorData);
-      }
-    } catch (whatsappError) {
-      console.error("WhatsApp sending error:", whatsappError);
-      // Don't throw error - email was sent successfully, WhatsApp is supplementary
-    }
-
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: true, 
       message: "Order confirmation email sent successfully" 
     }), {
