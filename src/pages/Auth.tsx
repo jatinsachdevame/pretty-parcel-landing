@@ -94,21 +94,23 @@ const Auth = () => {
     }
 
     if (data.user) {
-      // Create profile record
+      // Use upsert to handle cases where profile might already exist
       const { error: profileError } = await supabase
         .from("profiles")
-        .insert({
+        .upsert({
           user_id: data.user.id,
           full_name: signupFullName,
           phone: signupPhone,
           address: signupAddress,
+        }, {
+          onConflict: 'user_id'
         });
 
       if (profileError) {
-        console.error("Profile creation error:", profileError);
-        toast.error("Account created but profile setup failed. Please contact support.");
+        console.error("Profile setup error:", profileError);
+        toast.error("Profile setup failed: " + profileError.message);
       } else {
-        toast.success("Account created successfully!");
+        toast.success("Account created successfully! Please check your email to confirm.");
       }
       navigate("/");
     }
