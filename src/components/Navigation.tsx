@@ -76,25 +76,15 @@ export const Navigation = () => {
                         Shop Collections
                       </Button>
                     </Link>
-                    <Link to="/custom" onClick={handleLinkClick}>
-                      <Button 
-                        variant={isActive("/custom") ? "default" : "ghost"}
-                        className="w-full justify-start font-medium"
-                      >
-                        Create Custom
-                      </Button>
-                    </Link>
-                    {isAdmin && (
-                      <Link to="/admin" onClick={handleLinkClick}>
-                        <Button 
-                          variant={isActive("/admin") ? "default" : "ghost"}
-                          className="w-full justify-start font-medium"
-                        >
-                          Admin Panel
-                        </Button>
-                      </Link>
-                    )}
-                    {user ? (
+                  <Link to="/custom" onClick={handleLinkClick}>
+                    <Button 
+                      variant={isActive("/custom") ? "default" : "ghost"}
+                      className="w-full justify-start font-medium"
+                    >
+                      Create Custom
+                    </Button>
+                  </Link>
+                  {user ? (
                       <Button 
                         variant="ghost"
                         className="w-full justify-start"
@@ -139,16 +129,6 @@ export const Navigation = () => {
                   Create Custom
                 </Button>
               </Link>
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button 
-                    variant={isActive("/admin") ? "default" : "ghost"}
-                    className="font-medium"
-                  >
-                    Admin Panel
-                  </Button>
-                </Link>
-              )}
               <Link to="/cart">
                 <Button 
                   variant={isActive("/cart") ? "default" : "ghost"}

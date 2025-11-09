@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      discount_coupons: {
+        Row: {
+          active: boolean
+          applicable_product_ids: string[]
+          code: string
+          created_at: string
+          discount_percentage: number
+          id: string
+          times_used: number
+          updated_at: string
+          usage_limit: number
+          valid_from: string
+          valid_to: string
+        }
+        Insert: {
+          active?: boolean
+          applicable_product_ids?: string[]
+          code: string
+          created_at?: string
+          discount_percentage: number
+          id?: string
+          times_used?: number
+          updated_at?: string
+          usage_limit?: number
+          valid_from: string
+          valid_to: string
+        }
+        Update: {
+          active?: boolean
+          applicable_product_ids?: string[]
+          code?: string
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          times_used?: number
+          updated_at?: string
+          usage_limit?: number
+          valid_from?: string
+          valid_to?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           id: string
