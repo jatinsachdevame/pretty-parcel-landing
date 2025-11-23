@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -6,70 +6,32 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: "birthday" | "wedding" | "corporate";
-  image_url: string;
-  items: string[];
-  discount_percentage?: number;
-}
+import { products as allProducts } from "@/data/products";
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const { addToCart, updateQuantity, items } = useCart();
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const filteredProducts = selectedCategory === "all" 
-    ? products 
-    : products.filter(p => p.category === selectedCategory);
+    ? allProducts 
+    : allProducts.filter(p => p.category === selectedCategory);
 
-  const handleAddToCart = (product: Product) => {
-    addToCart({ ...product, image: product.image_url });
+  const handleAddToCart = (product: typeof allProducts[0]) => {
+    addToCart(product);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
   };
 
-  const handleIncrement = (product: Product) => {
+  const handleIncrement = (product: typeof allProducts[0]) => {
     const cartItem = items.find(item => item.id === product.id);
     if (cartItem) {
       updateQuantity(product.id, cartItem.quantity + 1);
     }
   };
 
-  const handleDecrement = (product: Product) => {
+  const handleDecrement = (product: typeof allProducts[0]) => {
     const cartItem = items.find(item => item.id === product.id);
     if (cartItem) {
       updateQuantity(product.id, cartItem.quantity - 1);
@@ -123,23 +85,20 @@ const Shop = () => {
           </div>
 
           {/* Products Grid */}
-          {loading ? (
-            <div className="text-center py-12">Loading products...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map((product, index) => (
-                <Card 
-                  key={product.id}
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="aspect-square overflow-hidden bg-secondary/30">
-                    <img 
-                      src={product.image_url} 
-                      alt={product.name}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProducts.map((product, index) => (
+              <Card 
+                key={product.id}
+                className="overflow-hidden hover:shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="aspect-square overflow-hidden bg-secondary/30">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-2xl font-semibold">{product.name}</h3>
@@ -199,7 +158,6 @@ const Shop = () => {
                 </Card>
               ))}
             </div>
-          )}
         </div>
       </div>
     </div>

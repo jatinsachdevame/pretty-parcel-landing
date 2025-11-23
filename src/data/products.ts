@@ -16,7 +16,7 @@ export const products: Product[] = [
     description: "A delightful collection of treats perfect for birthday celebrations",
     price: 89.99,
     category: "birthday",
-    image: "/src/assets/birthday-hamper.jpg",
+    image: "/images/birthday-hamper-1.jpg",
     items: ["Champagne", "Gourmet chocolates", "Birthday candles", "Fresh flowers", "Celebration card"]
   },
   {
@@ -25,7 +25,7 @@ export const products: Product[] = [
     description: "Premium birthday gift with luxury items",
     price: 129.99,
     category: "birthday",
-    image: "/src/assets/birthday-hamper.jpg",
+    image: "/images/birthday-hamper-2.jpg",
     items: ["Premium wine", "Artisan chocolates", "Spa products", "Designer candle", "Gift card"]
   },
   {
@@ -34,7 +34,7 @@ export const products: Product[] = [
     description: "Perfect for those with a sweet tooth",
     price: 69.99,
     category: "birthday",
-    image: "/src/assets/birthday-hamper.jpg",
+    image: "/images/birthday-hamper-1.jpg",
     items: ["Assorted cookies", "Chocolate truffles", "Candy selection", "Birthday banner", "Balloons"]
   },
   {
@@ -43,7 +43,7 @@ export const products: Product[] = [
     description: "Celebrate love with this sophisticated collection",
     price: 149.99,
     category: "wedding",
-    image: "/src/assets/wedding-hamper.jpg",
+    image: "/images/wedding-hamper-1.jpg",
     items: ["Premium champagne", "Crystal glasses", "Luxury chocolates", "White roses", "Congratulations card"]
   },
   {
@@ -52,7 +52,7 @@ export const products: Product[] = [
     description: "Romantic gifts for the happy couple",
     price: 119.99,
     category: "wedding",
-    image: "/src/assets/wedding-hamper.jpg",
+    image: "/images/wedding-hamper-2.jpg",
     items: ["Sparkling wine", "Gourmet treats", "Scented candles", "Photo frame", "Love notes"]
   },
   {
@@ -61,7 +61,7 @@ export const products: Product[] = [
     description: "Perfect gift for newlyweds",
     price: 179.99,
     category: "wedding",
-    image: "/src/assets/wedding-hamper.jpg",
+    image: "/images/wedding-hamper-1.jpg",
     items: ["Champagne set", "Spa products", "Luxury robes", "Aromatherapy oils", "Travel journal"]
   },
   {
@@ -70,7 +70,7 @@ export const products: Product[] = [
     description: "Impress your clients with this premium selection",
     price: 159.99,
     category: "corporate",
-    image: "/src/assets/corporate-hamper.jpg",
+    image: "/images/corporate-hamper-1.jpg",
     items: ["Premium coffee", "Gourmet snacks", "Business card holder", "Branded notebook", "Thank you card"]
   },
   {
@@ -79,7 +79,7 @@ export const products: Product[] = [
     description: "Sophisticated gifts for business partners",
     price: 199.99,
     category: "corporate",
-    image: "/src/assets/corporate-hamper.jpg",
+    image: "/images/corporate-hamper-2.jpg",
     items: ["Fine wine", "Artisan cheese", "Premium nuts", "Leather journal", "Pen set"]
   },
   {
@@ -88,7 +88,7 @@ export const products: Product[] = [
     description: "Show your team how much you value them",
     price: 79.99,
     category: "corporate",
-    image: "/src/assets/corporate-hamper.jpg",
+    image: "/images/corporate-hamper-1.jpg",
     items: ["Coffee pods", "Tea selection", "Healthy snacks", "Motivational card", "Desk plant"]
   }
 ];
