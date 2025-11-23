@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,67 +5,29 @@ import { Button } from "@/components/ui/button";
 import { Gift, Sparkles, Plus, Minus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { products as allProducts } from "@/data/products";
 import birthdayImage from "@/assets/birthday-hamper-2.jpg";
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: "birthday" | "wedding" | "corporate";
-  image_url: string;
-  items: string[];
-  discount_percentage?: number;
-}
-
 export default function BirthdayCollection() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const { addToCart, updateQuantity, items } = useCart();
+  const products = allProducts.filter(p => p.category === "birthday");
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("category", "birthday")
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddToCart = (product: Product) => {
-    addToCart({ ...product, image: product.image_url });
+  const handleAddToCart = (product: typeof allProducts[0]) => {
+    addToCart(product);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
   };
 
-  const handleIncrement = (product: Product) => {
+  const handleIncrement = (product: typeof allProducts[0]) => {
     const cartItem = items.find(item => item.id === product.id);
     if (cartItem) {
       updateQuantity(product.id, cartItem.quantity + 1);
     }
   };
 
-  const handleDecrement = (product: Product) => {
+  const handleDecrement = (product: typeof allProducts[0]) => {
     const cartItem = items.find(item => item.id === product.id);
     if (cartItem) {
       updateQuantity(product.id, cartItem.quantity - 1);
@@ -124,18 +85,15 @@ export default function BirthdayCollection() {
               </p>
             </div>
             
-            {loading ? (
-              <div className="text-center py-12">Loading products...</div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {products.map((product) => (
-                  <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover-scale">
-                    <div className="h-64 overflow-hidden">
-                      <img 
-                        src={product.image_url} 
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                      />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover-scale">
+                  <div className="h-64 overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    />
                     </div>
                     <CardHeader>
                       <CardTitle className="font-heading">{product.name}</CardTitle>
@@ -185,7 +143,6 @@ export default function BirthdayCollection() {
                   </Card>
                 ))}
               </div>
-            )}
           </div>
         </section>
       </main>
